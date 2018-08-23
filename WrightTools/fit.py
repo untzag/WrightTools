@@ -168,7 +168,7 @@ class Function:
         else:
             p0 = self.guess(*args)
         out = scipy_optimize.leastsq(self.residuals, p0, args=args)
-        if out[1] not in [1, 2]:  # solution was not found
+        if out[1] not in [1, 2, 3, 4]:  # solution was not found
             return np.full(len(p0), np.nan)
         return out[0]
 
