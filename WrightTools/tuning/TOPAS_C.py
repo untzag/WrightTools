@@ -786,8 +786,8 @@ def process_SFS_motortune(
     cen, wid, amp, base = outs
     cen = wt_units.converter(cen, 'wn', 'nm')
     # remove points with amplitudes that are ridiculous
-    amp[amp < 0.1] = np.nan
-    amp[amp > 5] = np.nan
+    #amp[amp < 0.1] = np.nan
+    #amp[amp > 5] = np.nan
     # remove points with centers that are ridiculous
     cen[cen < 470] = np.nan
     cen[cen > 540] = np.nan
@@ -798,7 +798,6 @@ def process_SFS_motortune(
     amp, cen, wid = wt_kit.share_nans([amp, cen, wid])
     # get ws, m1
     m1 = np.array(headers['w%d_Mixer_1 points' % OPA_index])
-    X2, Y2, Z2 = wt_artists.pcolor_helper(ws, m1, cen - ws)
     # choose best mixer position by expectation value
     function = wt_fit.ExpectationValue()
     chosen_deltas = np.full(ws.size, np.nan)
@@ -857,6 +856,7 @@ def process_SFS_motortune(
     # pcolor
     curve.map_colors(setpoints)  # this is what makes the visual misleading
     ax = plt.subplot(gs[1, 0])
+    # TODO: map delta M1 with the true delta evaluated at the color measured?
     mappable = ax.pcolor(X, Y, Z, vmin=0, vmax=np.nanmax(amp), cmap=cmap)
     ax.set_xlim(ws.min(), ws.max())
     ax.set_ylim(m1.min(), m1.max())
@@ -864,21 +864,28 @@ def process_SFS_motortune(
     ax.plot(ws, chosen_deltas, c='grey', lw=5)
     old_curve.map_colors(setpoints)
     final_deltas = curve.motors[0].positions - old_curve.motors[0].positions
-    ax.plot(setpoints, final_deltas, c='k', lw=5)
+    #ax.plot(setpoints, final_deltas, c='k', lw=5)
     plt.setp(ax.get_xticklabels(), visible=False)
+    ax.set_ylabel(r'$\mathsf{\Delta}$M1', fontsize=16)
     ax.grid()
 
     # colorbar
     cax = plt.subplot(gs[1, 1])
     plt.colorbar(mappable=mappable, cax=cax)
 
+    # pcolor
     ax = plt.subplot(gs[2, 0])
     cmap = wt_artists.colormaps['signed']
-    mappable = ax.pcolor(X2, Y2, Z2, cmap=cmap)
+    # Z2 = cen - ws
+    # X2 = cen
+    # Y2 = m1[:, None]
+    X2, Y2, Z2 = wt_artists.pcolor_helper(ws, m1[:, None], cen - ws)
+    magnitude = np.nanmax(np.abs(Z2))
+    mappable = ax.pcolor(X2, Y2, Z2, cmap=cmap, vmin=-magnitude, vmax=magnitude)
     ax.set_xlim(ws.min(), ws.max())
     ax.set_ylim(m1.min(), m1.max())
     plt.axhline(c='k', lw=1)
-    ax.plot(ws, chosen_deltas, c='grey', lw=5)
+    #ax.plot(ws, chosen_deltas, c='grey', lw=5)
     ax.plot(setpoints, final_deltas, c='k', lw=5)
     ax.set_xlabel('setpoint (nm)', fontsize=16)
     ax.set_ylabel(r'$\mathsf{\Delta}$M1', fontsize=16)
