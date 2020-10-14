@@ -1020,7 +1020,8 @@ class Data(Group):
             channel = self.channels[channel_index]
             values = self.channels[channel_index][:]
             points = [axis[:] for axis in self._axes]
-            xi = tuple(np.meshgrid(*points, indexing="ij"))
+            xit = tuple(np.meshgrid(*points, indexing="ij"))
+            xi = tuple([np.squeeze(xit[i]) for i in range(len(xit))])
             # 'undo' gridding
             arr = np.zeros((len(self._axes) + 1, values.size))
             for i in range(len(self._axes)):
